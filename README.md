@@ -1,5 +1,7 @@
 # hl-quant — 用启发式学习做量化策略优化
 
+This is an application of Jiayi Weng's [Heuristic Learning](https://trinkle23897.github.io/learning-beyond-gradients/) framework and Andrej Karpathy's [auto-research](https://github.com/karpathy/autoresearch) paradigm to quantitative trading strategy optimization.
+
 一个**最小化**的范例：把量化策略的研究流程，提炼成「**一个可编辑的策略 + 一个固定的回测打分器**」两件东西，再用启发式学习（Heuristic Learning / 启发式探索）持续把分数推高。
 
 思路源自一套真实的小微盘量化系统（`quant_trader`），这里只抽出它最核心的两个器官，去掉所有工程脚手架，让范式本身一眼可见。
@@ -46,15 +48,6 @@ python3 -m venv .venv
 source .venv/bin/activate          # Windows: .venv\Scripts\activate
 pip install -r requirements.txt
 ```
-
-### 3. 跑一次回测
-
-```bash
-cd example
-python backtest.py
-```
-
-首次联网拉取日线后会缓存到 `example/.cache/`，之后重复运行直接读缓存。
 
 ## 演示：一轮启发式学习
 
@@ -126,7 +119,8 @@ hl-quant/
     └── design/heuristic-exploration-framework.md   # 范式背后的完整设计
 ```
 
-## 致谢与延伸
+## References
 
-- 范式取自 Andrej Karpathy 的 **auto-research**（固定评估器 + 单一可编辑程序）与 Jiayi Weng 的 **启发式探索**（持续吸收失败、改代码、跑实验、压缩历史）。
-- 数据由[聚宽 JQData](https://www.joinquant.com/help/api/doc?name=JQDatadoc) 提供。
+Weng, J. (2026). *Learning Beyond Gradients*. https://trinkle23897.github.io/learning-beyond-gradients/
+
+Karpathy, A. (2025). *auto-research*. https://github.com/karpathy/autoresearch
