@@ -32,7 +32,7 @@ import strategy
 # ============================================================
 # 固定研究口径（FIXED —— 不要为了提分而修改）
 # ============================================================
-SECURITY = "000002.XSHE"          # 标的：万科 A（与聚宽 demo 一致）
+SECURITY = "000001.XSHG"          # 标的：上证指数
 START_DATE = "2025-03-01"         # 回测区间（落在账号数据权限窗口内）
 END_DATE = "2026-02-28"
 INITIAL_CASH = 1_000_000.0        # 初始资金
@@ -170,8 +170,7 @@ def main() -> None:
     print(f"标的 {SECURITY}  区间 {START_DATE} ~ {END_DATE}  "
           f"({len(prices)} 个交易日)")
     print(f"参数  SHORT_WINDOW={strategy.SHORT_WINDOW}  "
-          f"LONG_WINDOW={strategy.LONG_WINDOW}  "
-          f"TREND_WINDOW={strategy.TREND_WINDOW}")
+          f"LONG_WINDOW={strategy.LONG_WINDOW}")
     print("-" * 48)
     print(f"  总收益     : {m.total_return:+.2%}")
     print(f"  年化收益   : {m.annualized_return:+.2%}")
