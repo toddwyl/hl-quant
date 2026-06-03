@@ -1,0 +1,11 @@
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+
+# 回测数据缓存与结果（不入库）
+example/.cache/
+
+# OS
+.DS_Store
