@@ -1,0 +1,36 @@
+<svg width="760" height="220" viewBox="0 0 760 220" fill="none" xmlns="http://www.w3.org/2000/svg" font-family="ui-sans-serif, -apple-system, 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', sans-serif">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#0b1020"/>
+      <stop offset="1" stop-color="#111a33"/>
+    </linearGradient>
+    <linearGradient id="line" x1="0" y1="1" x2="1" y2="0">
+      <stop offset="0" stop-color="#38bdf8"/>
+      <stop offset="1" stop-color="#34d399"/>
+    </linearGradient>
+    <linearGradient id="fill" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#34d399" stop-opacity="0.28"/>
+      <stop offset="1" stop-color="#34d399" stop-opacity="0"/>
+    </linearGradient>
+  </defs>
+
+  <rect width="760" height="220" rx="18" fill="url(#bg)"/>
+
+  <!-- faint grid -->
+  <g stroke="#1e293b" stroke-width="1" opacity="0.6">
+    <line x1="40" y1="60" x2="720" y2="60"/>
+    <line x1="40" y1="110" x2="720" y2="110"/>
+    <line x1="40" y1="160" x2="720" y2="160"/>
+  </g>
+
+  <!-- rising equity curve = score going up -->
+  <path d="M60 168 L150 150 L230 156 L320 120 L410 128 L500 86 L590 96 L700 48"
+        fill="none" stroke="url(#line)" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M60 168 L150 150 L230 156 L320 120 L410 128 L500 86 L590 96 L700 48 L700 190 L60 190 Z"
+        fill="url(#fill)"/>
+  <circle cx="700" cy="48" r="6" fill="#34d399"/>
+
+  <!-- wordmark -->
+  <text x="60" y="98" font-size="52" font-weight="800" fill="#f8fafc" letter-spacing="-1">hl-quant</text>
+  <text x="62" y="128" font-size="18" font-weight="500" fill="#94a3b8">用启发式学习把量化策略的分数一步步推高</text>
+</svg>

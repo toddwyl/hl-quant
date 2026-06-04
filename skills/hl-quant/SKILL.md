@@ -1,5 +1,5 @@
 ---
-name: heuristic-exploration
+name: hl-quant
 description: Use when optimizing a trading strategy through heuristic learning — diagnosing strategy weakness, proposing economically-grounded hypotheses, patching the strategy file, evaluating with a fixed backtest scorer, and deciding whether to accept based on strict multi-metric gates. Triggers on "启发式探索", "启发式学习", "HL循环", "策略调参", "回测改进", "优化策略分数", "heuristic exploration", "heuristic learning".
 ---
 

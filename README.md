@@ -1,10 +1,29 @@
-# hl-quant — 用启发式学习做量化策略优化
+<div align="center">
 
-This is an application of Jiayi Weng's [Heuristic Learning](https://trinkle23897.github.io/learning-beyond-gradients/) framework and Andrej Karpathy's [auto-research](https://github.com/karpathy/autoresearch) paradigm to quantitative trading strategy optimization.
+<img src="docs/images/banner.svg" alt="hl-quant" width="760">
 
-一个**最小化**的范例：把量化策略的研究流程，提炼成「**一个可编辑的策略 + 一个固定的回测打分器**」两件东西，再用启发式学习（Heuristic Learning / 启发式探索）持续把分数推高。
+### 把量化研究压缩成「一个可编辑的策略 + 一个固定的打分器」，再用启发式学习持续把分数推高。
 
-思路源自一套真实的小微盘量化系统（`quant_trader`），这里只抽出它最核心的两个器官，去掉所有工程脚手架，让范式本身一眼可见。
+中文 · [English (TODO)](README.md)
+
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
+[![Stars](https://img.shields.io/github/stars/toddwyl/hl-quant?style=flat)](https://github.com/toddwyl/hl-quant/stargazers)
+[![Agent Skill](https://img.shields.io/badge/Agent%20Skill-npx%20skills-black)](skills/hl-quant/SKILL.md)
+[![Data: JoinQuant](https://img.shields.io/badge/data-聚宽%20JQData-orange)](https://www.joinquant.com/help/api/doc?name=JQDatadoc)
+
+[快速开始](#快速开始) · [工作原理](#工作原理) · [装成-agent-skill](#装成-agent-skill) · [微信交流群](#微信交流群) · [Star History](#star-history)
+
+</div>
+
+---
+
+## 这是什么
+
+`hl-quant` 把 Jiayi Weng 的 [Heuristic Learning](https://trinkle23897.github.io/learning-beyond-gradients/) 框架和 Andrej Karpathy 的 [auto-research](https://github.com/karpathy/autoresearch) 范式，落到**量化交易策略优化**这件具体的事上。
+
+它是一个**最小化**的范例：把量化策略的研究流程，提炼成「**一个可编辑的策略 + 一个固定的回测打分器**」两件东西，再用启发式学习（Heuristic Learning / 启发式探索）一轮轮把分数推高。
+
+思路源自一套真实的小微盘量化系统（`quant_trader`），这里只抽出它最核心的两个器官，去掉所有工程脚手架，让**范式本身一眼可见**。
 
 ## 核心范式：固定评估器 + 单一可编辑程序
 
@@ -18,21 +37,25 @@ This is an application of Jiayi Weng's [Heuristic Learning](https://trinkle23897
 - **`strategy.py`** —— 策略的唯一语义源。启发式学习**只允许改这一个文件**：提假设、改逻辑、调参数。
 - **`backtest.py`** —— 固定的评估口径。拉数据、模拟成交、算指标、输出**单一分数**。一旦固定就**不许动**——否则「改了评估器把分数刷上去」，候选之间不再可比。
 
-每个候选策略都用同一条命令、同一段数据、同一个评分公式打分，于是「这版到底有没有更好」变成一个可排序的客观问题。详见 [`docs/design/heuristic-exploration-framework.md`](docs/design/heuristic-exploration-framework.md)。
+每个候选策略都用同一条命令、同一段数据、同一个评分公式打分，于是「这版到底有没有更好」变成一个可排序的客观问题。
 
-## 评分公式
-
-沿用 `quant_trader` 的生产口径，把一条策略的表现压成一个标量：
+评分公式沿用 `quant_trader` 的生产口径，把一条策略的表现压成一个标量：
 
 ```
 score = Sharpe * 0.5 + 年化收益 * 2.0 - 最大回撤 * 1.0
 ```
 
+> [!NOTE]
+> 范式背后的完整设计见 [`docs/design/heuristic-exploration-framework.md`](docs/design/heuristic-exploration-framework.md)。
+
 ## 快速开始
 
 ### 1. 配置聚宽（JoinQuant）数据凭证
 
-回测数据来自[聚宽 JQData](https://www.joinquant.com/help/api/doc?name=JQDatadoc)。**不要把账号密码写进代码或提交进仓库**，用环境变量传入：
+回测数据来自[聚宽 JQData](https://www.joinquant.com/help/api/doc?name=JQDatadoc)。
+
+> [!WARNING]
+> **不要把账号密码写进代码或提交进仓库**，用环境变量传入：
 
 ```bash
 export JOINQUANT_ACCOUNT=<你的聚宽账号>
@@ -49,7 +72,28 @@ source .venv/bin/activate          # Windows: .venv\Scripts\activate
 pip install -r requirements.txt
 ```
 
-## 演示：一轮启发式学习
+### 3. 跑一次基线回测
+
+```bash
+cd example
+python backtest.py
+```
+
+## 工作原理
+
+启发式学习是一个结构化的推理循环——每一轮提一个**有经济含义**的假设，只改策略文件，用固定评估器打分，**严格更好才留**：
+
+```
+Probe（跑基线）→ Diagnose（看弱点）→ Propose（提一个有经济含义的假设）
+   → Patch（只改 strategy.py）→ Evaluate（固定评估器打分）→ Decide（严格更好才留）
+```
+
+两条硬规矩：
+
+1. **只改 `strategy.py`**，评估器 / 数据源 / 评分公式一律不动。
+2. **严格更好才算数**——分数没有严格高于基线的候选，不予保留；窄区间死区式的过拟合（在连续变量上挖 1~2 点宽的坑）一律拒绝。
+
+### 演示：一轮启发式学习
 
 初始策略就是聚宽经典的**双均线**例子（短期线上穿长期线买入、下穿卖出），原封不动放在 `strategy.py` 里。回测标的上证指数（`000001.XSHG`），区间约一年（同期买入持有约 **+25.5%**）。
 
@@ -80,23 +124,12 @@ pip install -r requirements.txt
 
 六项指标全面变好，分数严格抬升 → **接受**。
 
+> [!TIP]
 > **顺带一条反过拟合的纪律**：继续放慢到 10/30、20/60，分数还会更高（1.36、1.28），但交易只剩 1~2 笔——样本太少，更像是撞上了这段行情，而非稳健规律。所以我们停在 10/20 这个「分数全面更好 + 交易笔数健康」的候选上，而不是一味追最高分。这正是 HL 要靠**严格多指标门槛 + 有效样本量**来挡住的陷阱。
 
-## 启发式学习循环
+## 装成 Agent Skill
 
-```
-Probe（跑基线）→ Diagnose（看弱点）→ Propose（提一个有经济含义的假设）
-   → Patch（只改 strategy.py）→ Evaluate（固定评估器打分）→ Decide（严格更好才留）
-```
-
-两条硬规矩：
-
-1. **只改 `strategy.py`**，评估器/数据源/评分公式一律不动。
-2. **严格更好才算数**——分数没有严格高于基线的候选，不予保留；窄区间死区式的过拟合（在连续变量上挖 1~2 点宽的坑）一律拒绝。
-
-## 把这套循环装成 Agent Skill
-
-上面这套循环已经打包成一个可复用的 [Agent Skill](skills/heuristic-exploration/SKILL.md)，用 [`npx skills`](https://github.com/vercel-labs/skills) 一键安装到你自己的 agent（Claude Code / Cursor 等）：
+上面这套循环已经打包成一个可复用的 [Agent Skill](skills/hl-quant/SKILL.md)，用 [`npx skills`](https://github.com/vercel-labs/skills) 一键安装到你自己的 agent（Claude Code / Cursor 等）：
 
 ```bash
 npx skills add toddwyl/hl-quant
@@ -114,10 +147,31 @@ hl-quant/
 │   ├── strategy.py     # 唯一可编辑程序（HL 改这里）
 │   └── backtest.py     # 固定评估器（拉聚宽数据 → 模拟 → 打分）
 ├── skills/
-│   └── heuristic-exploration/SKILL.md   # 可 npx 安装的启发式探索 skill
+│   └── hl-quant/SKILL.md            # 可 npx 安装的启发式探索 skill
 └── docs/
     └── design/heuristic-exploration-framework.md   # 范式背后的完整设计
 ```
+
+## 微信交流群
+
+面向中文用户的微信交流群（**WeChat group for Chinese-speaking users**）。扫码加入，一起讨论启发式学习、量化策略与 Agent 工作流：
+
+<div align="center">
+<img src="docs/images/wechat-group.jpg" alt="微信交流群二维码" width="240">
+</div>
+
+> [!NOTE]
+> 二维码图片请放在 `docs/images/wechat-group.jpg`（群二维码会定期更新；若已过期，欢迎在 Issues 留言）。
+
+## Star History
+
+<a href="https://star-history.com/#toddwyl/hl-quant&Date">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/svg?repos=toddwyl/hl-quant&type=Date&theme=dark" />
+    <source media="(prefers-color-scheme: light)" srcset="https://api.star-history.com/svg?repos=toddwyl/hl-quant&type=Date" />
+    <img alt="Star History Chart" src="https://api.star-history.com/svg?repos=toddwyl/hl-quant&type=Date" width="600" />
+  </picture>
+</a>
 
 ## References
 
