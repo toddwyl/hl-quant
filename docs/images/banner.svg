@@ -24,9 +24,9 @@
   </g>
 
   <!-- rising equity curve = score going up -->
-  <path d="M60 168 L150 150 L230 156 L320 120 L410 128 L500 86 L590 96 L700 48"
+  <path d="M320 158 L395 138 L470 144 L545 108 L610 116 L700 48"
         fill="none" stroke="url(#line)" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
-  <path d="M60 168 L150 150 L230 156 L320 120 L410 128 L500 86 L590 96 L700 48 L700 190 L60 190 Z"
+  <path d="M320 158 L395 138 L470 144 L545 108 L610 116 L700 48 L700 190 L320 190 Z"
         fill="url(#fill)"/>
   <circle cx="700" cy="48" r="6" fill="#34d399"/>
 

@@ -65,11 +65,9 @@ export JOINQUANT_PASSWORD=<你的聚宽密码>
 <details>
 <summary>📦 安装依赖</summary>
 
-建议用虚拟环境，按 `requirements.txt` 自行安装：
+按 `requirements.txt` 安装依赖：
 
 ```bash
-python3 -m venv .venv
-source .venv/bin/activate          # Windows: .venv\Scripts\activate
 pip install -r requirements.txt
 ```
 
