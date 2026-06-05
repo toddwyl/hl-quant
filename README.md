@@ -9,7 +9,7 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 [![Stars](https://img.shields.io/github/stars/toddwyl/hl-quant?style=flat)](https://github.com/toddwyl/hl-quant/stargazers)
 [![Agent Skill](https://img.shields.io/badge/Agent%20Skill-npx%20skills-black)](skills/hl-quant/SKILL.md)
-[![Data: JoinQuant](https://img.shields.io/badge/data-聚宽%20JQData-orange)](https://www.joinquant.com/help/api/doc?name=JQDatadoc)
+[![Demo Data: JoinQuant](https://img.shields.io/badge/demo%20data-聚宽%20JQData-orange)](https://www.joinquant.com/help/api/doc?name=JQDatadoc)
 
 [What is this](#what-is-this) · [快速开始](#快速开始) · [How it works](#how-it-works) · [安装 Skills](#安装-skills) · [微信交流群](#微信交流群) · [Star History](#star-history)
 
@@ -23,7 +23,7 @@
 
 它是一个**最小化**的范例：把量化策略的研究流程，提炼成「**一个可编辑的策略 + 一个固定的回测打分器**」两件东西，再用启发式学习（Heuristic Learning / 启发式探索）一轮轮把分数推高。
 
-思路源自一套真实的小微盘量化系统（`quant_trader`），这里只抽出它最核心的两个器官，去掉所有工程脚手架，让**范式本身一眼可见**。
+这里保留的是一个**通用的最小演示**：用简单策略和固定回测器展示 HL 如何组织“提出假设 → 修改策略 → 固定评估 → 接受/拒绝”的优化过程。具体策略、股票池、数据源、交易约束和评分门槛都需要按自己的研究目标重新设计；本仓库不构成投资建议。
 
 ## 核心范式：固定评估器 + 单一可编辑程序
 
@@ -53,7 +53,7 @@ score = Sortino
 <details>
 <summary>🔑 配置数据凭证</summary>
 
-回测数据来自[聚宽 JQData](https://www.joinquant.com/help/api/doc?name=JQDatadoc)。不要把账号密码写进代码或提交进仓库，用环境变量传入：
+示例回测默认用[聚宽 JQData](https://www.joinquant.com/help/api/doc?name=JQDatadoc) 拉取日线数据，只是为了演示数据接口和固定评估流程；实际项目可以替换成自己的数据源。不要把账号密码写进代码或提交进仓库，用环境变量传入：
 
 ```bash
 export JOINQUANT_ACCOUNT=<你的聚宽账号>
@@ -177,7 +177,7 @@ hl-quant/
 ├── requirements.txt    # pip 依赖（仓库不附带任何虚拟环境）
 ├── example/
 │   ├── strategy.py     # 唯一可编辑程序（HL 改这里）
-│   └── backtest.py     # 固定评估器（拉聚宽数据 → 模拟 → 打分）
+│   └── backtest.py     # 固定评估器（拉示例数据 → 模拟 → 打分）
 ├── skills/
 │   └── hl-quant/SKILL.md            # 可 npx 安装的启发式探索 skill
 └── docs/
