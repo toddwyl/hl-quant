@@ -3,11 +3,11 @@
 职责：
 1. 用环境变量里的聚宽账号认证，拉取（并缓存）日线数据；
 2. 逐日调用 ``strategy.decide(...)``，模拟满仓/空仓切换、扣减聚宽口径的手续费；
-3. 计算 Sharpe / 年化 / 最大回撤等指标，汇成**单一分数**。
+3. 计算 Sharpe / Sortino / 年化 / 最大回撤等指标，汇成**单一分数**。
 
-评分公式沿用 quant_trader 生产口径：
+评分口径：
 
-    score = Sharpe * 0.5 + 年化收益 * 2.0 - 最大回撤 * 1.0
+    score = Sortino
 
 ⚠️ 本文件是固定评估口径，HL 循环**不允许修改**它。要提分只能改 strategy.py。
 若评估器本身坏了（如认证失败、数据缺口），停下来报告，不要靠改基准绕过。
@@ -52,6 +52,7 @@ class Metrics:
     total_return: float
     annualized_return: float
     sharpe_ratio: float
+    sortino_ratio: float
     max_drawdown: float
     win_rate: float
     trade_count: int
@@ -143,6 +144,13 @@ def _compute_metrics(equity_curve: list[float], closed_trades: list[float]) -> M
         if std > 0
         else 0.0
     )
+    downside_returns = daily_returns[daily_returns < 0]
+    downside_std = float(downside_returns.std())
+    sortino = (
+        float(daily_returns.mean()) / downside_std * math.sqrt(TRADING_DAYS_PER_YEAR)
+        if downside_std > 0
+        else 0.0
+    )
 
     running_max = equity.cummax()
     drawdown = (equity - running_max) / running_max
@@ -151,13 +159,14 @@ def _compute_metrics(equity_curve: list[float], closed_trades: list[float]) -> M
     wins = sum(1 for pnl in closed_trades if pnl > 0)
     win_rate = wins / len(closed_trades) if closed_trades else 0.0
 
-    score = sharpe * 0.5 + annualized_return * 2.0 - max_drawdown * 1.0
+    score = sortino
 
     return Metrics(
         score=score,
         total_return=total_return,
         annualized_return=annualized_return,
         sharpe_ratio=sharpe,
+        sortino_ratio=sortino,
         max_drawdown=max_drawdown,
         win_rate=win_rate,
         trade_count=len(closed_trades),
@@ -175,6 +184,7 @@ def main() -> None:
     print(f"  总收益     : {m.total_return:+.2%}")
     print(f"  年化收益   : {m.annualized_return:+.2%}")
     print(f"  Sharpe     : {m.sharpe_ratio:.3f}")
+    print(f"  Sortino    : {m.sortino_ratio:.3f}")
     print(f"  最大回撤   : {m.max_drawdown:.2%}")
     print(f"  胜率       : {m.win_rate:.2%}  ({m.trade_count} 笔)")
     print("-" * 48)

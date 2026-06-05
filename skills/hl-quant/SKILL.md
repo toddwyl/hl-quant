@@ -1,180 +1,181 @@
 ---
 name: hl-quant
-description: Use when optimizing a trading strategy through heuristic learning — diagnosing strategy weakness, proposing economically-grounded hypotheses, patching the strategy file, evaluating with a fixed backtest scorer, and deciding whether to accept based on strict multi-metric gates. Triggers on "启发式探索", "启发式学习", "HL循环", "策略调参", "回测改进", "优化策略分数", "heuristic exploration", "heuristic learning".
+description: 当用户要用启发式学习优化量化交易策略时使用：诊断策略弱点、提出有经济含义的假设、只修改策略文件、用固定回测评分器评估，并按严格门槛决定是否接受。触发词包括“启发式探索”“启发式学习”“HL循环”“策略调参”“回测改进”“优化策略分数”“heuristic exploration”“heuristic learning”。
 ---
 
-# Heuristic Exploration for Quantitative Strategy Optimization
+# hl-quant：量化策略的启发式探索 Skill
 
-Iteratively improve a trading strategy by running a fixed backtest scorer, diagnosing failures, proposing one economically-grounded hypothesis at a time, and accepting only candidates that are strictly better across all key metrics.
+用固定回测评分器反复评估策略候选：先诊断弱点，再提出一个有经济含义的假设，只改策略文件，最后用同一评分口径决定是否接受。
 
-**Reference:** The full framework design is in [`docs/design/heuristic-exploration-framework.md`](../../docs/design/heuristic-exploration-framework.md).
+完整框架见 [`docs/design/heuristic-exploration-framework.md`](../../docs/design/heuristic-exploration-framework.md)。
 
-## When to Use
+## 什么时候使用
 
-- Strategy underperforms (low Sharpe, high drawdown, low win rate)
-- Want to improve strategy score / return / risk-adjusted metrics
-- Need to diagnose *why* a strategy fails (not just that it fails)
-- Evaluating whether a parameter change is genuine improvement or overfitting
+- 策略表现弱：Sortino / Sharpe 偏低、回撤偏大、胜率偏低。
+- 需要提高策略 score、收益或风险调整后表现。
+- 需要解释策略为什么失败，而不是只知道分数低。
+- 需要判断某个参数变化是真改进，还是过拟合。
 
-## When NOT to Use
+## 什么时候不要用
 
-- Pure numerical parameter search within a fixed space → use Optuna / grid search instead
-- Strategy logic is already frozen and only needs deployment
-- No fixed evaluator exists yet → build one first
+- 已有固定参数空间，只需要纯数值搜索：优先用 Optuna / grid search。
+- 策略逻辑已经冻结，只是在做部署。
+- 还没有固定评估器：先建立评估器，再做 HL。
 
-## Core Loop
+## 核心循环
 
 ```
 Probe → Diagnose → Propose → Patch → Evaluate → Replay → Decide → Compress
 ```
 
-1. **Probe**: Run the fixed evaluator, get baseline score + all metrics + attribution artifacts.
-2. **Diagnose**: Analyze *why* it's weak — not just "score is low". Identify failure mode: bad entries? premature exits? wrong regime? concentration risk? whipsaw in noise?
-3. **Propose**: One hypothesis with **economic/market logic** (not data mining). Example: "slow MAs filter noise better in trending markets" — not "MA=17 gives highest score".
-4. **Patch**: Edit **ONLY** the strategy file. Never touch the evaluator, data source, or scoring formula.
-5. **Evaluate**: Run the same fixed evaluator. Compare score + all key metrics vs baseline.
-6. **Replay**: Check golden cases / live constraints aren't broken by the change.
-7. **Decide**: Pass the strict multi-metric gate → accept. Otherwise → reject and return to Diagnose.
-8. **Compress**: Remove zero-trigger / negative-contribution rules. Keep the strategy small and interpretable. Never infinitely stack if-else patches.
+1. **Probe**：运行固定评估器，记录基线 score、关键指标和归因材料。
+2. **Diagnose**：解释弱点来自哪里，例如入场太早、离场太快、震荡中反复打脸、仓位过度集中、 regime 错配。
+3. **Propose**：每轮只提一个有经济含义的假设，例如“放慢均线可以过滤噪声并持有趋势更久”，而不是“MA=17 分数最高”。
+4. **Patch**：只修改策略文件。不要改评估器、数据源、成本模型或评分公式。
+5. **Evaluate**：用同一评估器重跑，比较 score 和关键指标。
+6. **Replay**：检查 golden case、实盘约束和已知失败场景没有退化。
+7. **Decide**：通过严格门槛才接受，否则拒绝并回到 Diagnose。
+8. **Compress**：删除无触发、负贡献、重复或解释不清的规则，保持策略小而可解释。
 
-## Fixed Evaluator + Single Editable Program
+## 固定评估器与唯一可编辑程序
 
-This is the foundation of comparability. Every candidate runs through the **same** pipeline:
+候选策略必须走同一条评估管线：
 
 ```
-same data → same backtest engine → same cost model → same scoring formula → one score
+同一数据 → 同一回测引擎 → 同一成本模型 → 同一评分公式 → 一个 score
 ```
 
-**Only the strategy file is editable.** If you change the evaluator to "make the score go up", scores become incomparable and the entire loop is self-deception.
+只有策略文件可以改。如果为了提分去改评估器，候选之间就不再可比，整个循环会变成自欺。
 
-If the evaluator infrastructure breaks (auth fails, data gap, engine crash) → **stop and report the blocker**. Never work around it by modifying the baseline.
+如果认证失败、数据缺口、引擎崩溃或缓存不可读，停止并报告阻塞。不要靠修改基线绕过问题。
 
-## Acceptance Gate (Strict)
+## Score 口径
 
-A candidate MUST pass ALL of the following — no partial acceptance:
+本仓库示例采用 **Sortino ratio（索提诺比率）** 作为主 score：
 
-| Metric | Requirement |
-|--------|-------------|
-| **score** (primary) | strictly higher than baseline |
-| total return | not degraded |
-| annualized return | not degraded |
-| Sharpe ratio | not degraded |
-| max drawdown | not worse |
-| win rate | not significantly worse |
-| trade count | sufficient for statistical validity |
+```
+score = Sortino
+```
 
-**Score up but a key metric collapsed → REJECT.** A higher score from one lucky trade is not improvement.
+Sortino 只惩罚下行波动，比 Sharpe 更贴近“上行波动不是坏事、下行波动才是风险”的交易直觉。Sharpe、收益、回撤、胜率和交易笔数仍是验收门槛的一部分。
 
-## Anti-Overfitting Rules (Mandatory)
+## 接受门槛
 
-### 1. Every Change Must Have Economic / Market Logic
+候选必须同时满足以下条件：
 
-Strategy modifications must be explainable in terms of market behavior, not just "this number gave a higher score":
+| 指标 | 要求 |
+| --- | --- |
+| **score / Sortino** | 严格高于基线 |
+| 总收益 | 不退化 |
+| 年化收益 | 不退化 |
+| Sharpe | 不退化 |
+| 最大回撤 | 不变差 |
+| 胜率 | 不显著变差 |
+| 交易笔数 | 样本量足够，不能只靠 1-2 笔幸运交易 |
 
-| Change | Economic logic | Verdict |
-|--------|---------------|---------|
-| Slow MA from 5/10 to 10/20 | Filters intraday noise, holds trends longer | ✅ |
-| Add trend filter (price > 60-day MA) | Avoids buying in downtrend regime | ✅ |
-| MFI dead zone 72-73 | Why 72-73 specifically? No market explanation | ❌ |
-| Tighten stop-loss from 10% to 8.2% | Why 8.2% exactly? Sounds like curve-fitting | ❌ |
+score 变高但关键指标塌掉，拒绝。一次幸运交易带来的高 Sortino，不等于策略真的变好。
 
-### 2. No Narrow-Pit Filtering on Continuous Variables
+## 反过拟合纪律
 
-**FORBIDDEN**: 1-2 point wide dead zones on MFI, RSI, volume ratio, etc.
+### 每个改动必须有经济含义
+
+| 改动 | 经济解释 | 结论 |
+| --- | --- | --- |
+| 均线从 5/10 放慢到 10/20 | 过滤日间噪声，持有趋势更久 | 可接受 |
+| 增加价格高于 60 日均线的趋势过滤 | 避免下行趋势里逆势买入 | 可接受 |
+| MFI 死区 72-73 | 为什么偏偏是 72-73，没有市场解释 | 拒绝 |
+| 止损从 10% 调到 8.2% | 8.2% 太精确，像曲线拟合 | 拒绝 |
+
+### 禁止连续变量上的窄坑过滤
+
+不要在 MFI、RSI、量比等连续变量上挖 1-2 个点宽的死区：
 
 ```python
-# ❌ OVERFITTING: Why 57-58 but not 56-57? No economic explanation.
+# 过拟合：为什么是 57-58，而不是 56-57？
 ENTRY_MFI_DEAD_ZONE_MIN = 57.0
 ENTRY_MFI_DEAD_ZONE_MAX = 58.0
+```
 
-# ✅ ACCEPTABLE: Continuous interval with clear economic meaning
-ENTRY_MFI_DEAD_ZONE_MIN = 60.0  # "MFI 60-66 = capital flow hesitation zone"
+更稳健的变化应该是有经济含义的连续区间，或规则级开关：
+
+```python
+# 可解释：MFI 60-66 表示资金流犹豫区
+ENTRY_MFI_DEAD_ZONE_MIN = 60.0
 ENTRY_MFI_DEAD_ZONE_MAX = 66.0
 ```
 
-Filters must be (a) continuous intervals with economic meaning, or (b) rule-level switches.
+### 禁止未来函数
 
-### 3. No Future Information
+- 入场信号只能使用已完成的 bar。
+- 成交必须发生在下一根 bar 的开盘，或另一个预先固定的成交规则。
+- 不要用同日未完成的 high / low / amplitude 过滤当日入场。
 
-- Entry signals use only completed bar data
-- Orders execute at next bar's open (or a deterministic fill rule)
-- Never use same-day incomplete high/low/amplitude to filter entries
+### 保证样本量
 
-### 4. Sufficient Sample Size
+高 score 但只有 1-2 笔交易，通常是运气，不是稳健 edge。交易次数太少时，即使 score 更高，也不能直接接受。
 
-High score with 1-2 trades is likely luck, not a robust edge. Require enough trades for statistical validity. A strategy that trades once and wins 100% is **not** better than one that trades 50 times with 60% win rate.
+### 训练 / 验证纪律
 
-### 5. Train / Validation Discipline
+如果有股票池或时间切分：
 
-When a stock pool or time split is available:
+- **训练集**：可以用于搜索。
+- **验证集**：每轮都可以评估，但不能用来指导搜索方向；可以用验证退化来拒绝过拟合，不能为了最大化验证分数去调参。
+- **最终 holdout**：候选冻结后只跑一次。holdout 输给基线，不部署。
 
-- **Training split**: Used freely during search
-- **Validation split**: Evaluated every trial but **NEVER used to guide search direction** — observing validation degradation to reject overfitting is allowed; tuning parameters to maximize validation score is data leakage
-- **Final holdout**: Run once only after candidate is frozen. If holdout loses to baseline → do not deploy
+泛化健康度参考：
 
-Monitor generalization health:
+| 指标 | 健康 | 警告 | 拒绝 |
+| --- | --- | --- | --- |
+| train score - validation score | < 0.5 | 0.5 ~ 1.0 | > 1.0 |
+| train return / validation return | 0.7 ~ 1.3 | 0.5 ~ 0.7 或 1.3 ~ 2.0 | < 0.5 或 > 2.0 |
 
-| Indicator | Healthy | Warning | Reject |
-|-----------|---------|---------|--------|
-| train score − validation score | < 0.5 | 0.5 ~ 1.0 | > 1.0 |
-| train return / validation return | 0.7 ~ 1.3 | 0.5 ~ 0.7 or 1.3 ~ 2.0 | < 0.5 or > 2.0 |
+进入拒绝区的候选，即使训练集硬门槛通过，也视为过拟合。
 
-A candidate in "Reject" zone fails even if it passes the hard gates — train/validation divergence indicates overfitting.
+## 改进泛化的做法
 
-## How to Improve Generalization
+1. **优先结构变化，而不是精调阈值**：增加 regime filter 往往比把阈值从 7.2% 调到 7.8% 更可泛化。
+2. **每轮只动一个变量**：否则失败无法归因，成功也难复现。
+3. **接受后压缩**：删掉不触发、重叠、解释不清的规则。
+4. **回放 golden case**：真实失败场景要固定成回归样例，防止实盘约束退化。
+5. **不要追最高分**：停在多指标都变好且交易笔数健康的候选，而不是追 1-2 笔交易堆出来的最高 score。
 
-1. **Prefer structural changes over parameter tweaks**: Adding a regime filter (trend vs. range) generalizes better than tuning a threshold from 7.2% to 7.8%.
-2. **One variable per iteration**: Change one thing, evaluate, attribute. Multiple simultaneous changes make failure unattributable and success unrepeatable.
-3. **Compress after accepting**: Remove rules that don't trigger, merge overlapping conditions, keep the strategy small and interpretable. A 50-rule strategy that could be 10 rules is overfitting in structural form.
-4. **Replay golden cases**: Freeze real failure scenarios as fixtures. New candidates must pass them — no regressions in live constraints (T+1, position limits, price validity, etc.).
-5. **Don't chase the highest score**: Stop at the candidate where all metrics improve and trade count is healthy, not at the one with the absolute highest score but 1-2 trades.
+## 示例流程
 
-## Workflow Example
-
-```
-# 1. Probe baseline
+```bash
+# 1. Probe：跑基线
 python backtest.py
-# → score 0.39, return +5.5%, Sharpe 0.70, drawdown 7.1%, 12 trades
+# score 0.7545, return +5.46%, Sharpe 0.698, Sortino 0.755, drawdown 7.10%, 12 trades
 
 # 2. Diagnose
-#    "MA 5/10 too sensitive — whipsawed in and out, only captured 5.5% of 25.5% index gain"
+# 5/10 均线太灵敏，震荡中频繁翻转，只吃到同期指数涨幅的一小段。
 
-# 3. Propose hypothesis
-#    "Slow MAs to 10/20: filters noise, holds trends longer. Continuous sensitivity adjustment, not a narrow dead zone."
+# 3. Propose
+# 放慢到 10/20：过滤噪声，持有趋势更久。这是灵敏度的连续调整，不是窄坑。
 
-# 4. Patch strategy.py: SHORT_WINDOW=10, LONG_WINDOW=20
+# 4. Patch
+# 修改 strategy.py：SHORT_WINDOW=10, LONG_WINDOW=20
 
 # 5. Evaluate
 python backtest.py
-# → score 1.22, return +17.3%, Sharpe 1.84, drawdown 6.7%, 7 trades
+# score 2.0615, return +17.33%, Sharpe 1.839, Sortino 2.062, drawdown 6.71%, 7 trades
 
-# 6. Decide: ALL metrics improved → ACCEPT
+# 6. Decide
+# score 严格提高，关键指标不退化，交易笔数仍可接受 → ACCEPT
 
-# 7. Compress: No redundant rules to remove. Strategy stays minimal.
+# 7. Compress
+# 没有冗余规则，策略保持最小。
 ```
 
-## Common Mistakes
+## 常见错误
 
-| Mistake | Fix |
-|---------|-----|
-| Modifying evaluator to boost score | Only edit the strategy file |
-| Adding narrow dead zones on continuous vars | Use continuous intervals with economic meaning |
-| Accepting based on score alone | Must pass ALL key metrics |
-| Tuning parameters to maximize validation score | Validation is for checking, not optimizing — that's data leakage |
-| High score with 1-2 trades | Require sufficient sample size |
-| Using future information for entry signals | Only use completed bar data |
-| Stacking patches without compression | After accepting, remove zero-trigger rules, keep strategy small |
-| Multiple changes per iteration | One hypothesis per cycle for clean attribution |
-| Ignoring train/validation divergence | Score gap > 1.0 = overfitting, reject even if gates pass |
-
-## Overfitting Failure Case Study (from Production)
-
-A production search branch added 4 narrow MFI dead zones (57-58, 68-69, 72-73, 74-76) and achieved score 3.18 / win rate 69% / drawdown 6.7%. **Rejected** because:
-
-1. No economic explanation for why those specific 1-point ranges are bad
-2. 1-point bandwidth means any market microstructure change invalidates them
-3. Fragmented filtering destroyed interpretability of the original MFI 60-66 "hesitation zone"
-4. Score jump (2.73→3.18) came from excluding tiny noise — unstable out-of-sample
-5. **Generalization failure**: Such narrow filtering would almost certainly fail on a validation split — the excluded points are noise artifacts of the training stock pool
-
-The alternative approach achieved score 2.94 with only 2 minimal, well-justified changes and ALL 6 metrics strictly improved. **Less is more when each change has clear economic logic.**
+| 错误 | 修正 |
+| --- | --- |
+| 为了提分修改评估器 | 只改策略文件 |
+| 在连续变量上加窄死区 | 使用有经济含义的连续区间或规则开关 |
+| 只看 score 接受候选 | score 是主指标，但关键指标也要过门槛 |
+| 用验证集调参 | 验证集只用于检查泛化，不用于指导搜索 |
+| 高 score 但只有 1-2 笔交易 | 要求足够样本量 |
+| 入场信号使用未来信息 | 只用已完成 bar |
+| 不断叠规则不压缩 | 接受后删除无效和重叠规则 |
+| 一轮改多个变量 | 每轮一个假设，保证归因清楚 |
+| 忽略 train / validation 分化 | 分化过大即拒绝 |
