@@ -2,7 +2,7 @@
 
 <img src="docs/images/banner.svg" alt="hl-quant" width="760">
 
-### Compress quant research into "one editable strategy + one fixed scorer", then use Heuristic Learning to push the score up, round after round.
+### Compress quant research into "one editable strategy + one fixed scorer"<br>then use Heuristic Learning to keep pushing the metrics up.
 
 [中文](README.md) · English
 

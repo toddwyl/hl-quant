@@ -2,7 +2,7 @@
 
 <img src="docs/images/banner.svg" alt="hl-quant" width="760">
 
-### 把量化研究压缩成「一个可编辑的策略 + 一个固定的打分器」，再用启发式学习持续把分数推高。
+### 把量化研究压缩成「一个可编辑的策略 + 一个固定的打分器」<br>再用启发式学习持续把指标推高。
 
 中文 · [English](README.en.md)
 
