@@ -1,4 +1,6 @@
-# 启发式探索（Heuristic Exploration）框架设计
+# 启发式探索（Heuristic Exploration）框架
+
+> 本文件是 `hl-quant` skill 自带的框架说明，随 skill 一起分发，保证 skill 脱离仓库后仍然自包含。仓库内 `docs/design/heuristic-exploration-framework.md` 是同一份内容的「设计文档/落地模板」视角；二者修改时需保持一致。
 
 ## 背景
 
@@ -7,9 +9,7 @@
 - **Jiayi Weng 的「启发式探索」（Heuristic Exploration）**——见其文章 *Learning Beyond Gradients*。核心洞察不是「手写规则比模型强」，而是：**当 agent 能持续吸收失败、改代码、跑实验、写测试、看回放、压缩历史时，启发式规则不再是一次性补丁，而可以被维护成一个持续进化的系统。**
 - **Andrej Karpathy 的「auto-research」**——其 `autoresearch` 实验提出的「**固定评估器 + 单一可编辑程序**」研究范式：评估流程必须固定，agent 只能修改被优化的程序本身，从而让每个候选方案都在同一口径下可比，避免「改了评估器把分数刷上去」的自欺。
 
-本框架把上述两点制度化，适用于任何**有固定评估口径、追求可度量更优解**的工程问题（性能、质量、转化、错误率等）。
-
-> 本文件既是设计说明，也是落地模板。下文带 `<占位>` 的部分，落地项目时替换成你项目的真实目标程序、评估命令与评分指标。
+本框架把上述两点制度化，适用于任何**有固定评估口径、追求可度量更优解**的工程问题（性能、质量、转化、错误率等）。`hl-quant` skill 是该框架在**量化交易**领域的一个实例；下文带 `<占位>` 的部分，迁移到其它领域时替换成你项目的真实目标程序、评估命令与评分指标。
 
 ## 六点核心启发
 
@@ -23,7 +23,7 @@
    统一的 `trials.jsonl` / `summary.csv` 让 agent 能跨轮次学习，而不是每次从零开始。
 
 4. **回放与 golden case 是防遗忘机制**
-   旧能力要固化成回归测试、固定 seed replay、golden trace、版本 diff，纳入 `scripts/harness.sh`，防止改新功能时悄悄退化。
+   旧能力要固化成回归测试、固定 seed replay、golden trace、版本 diff，纳入验证门禁，防止改新功能时悄悄退化。
 
 5. **吸收反馈之后必须压缩历史**
    不无限叠 if-else；每轮局部修补后都要简化、删除无效规则、保留更小的可解释结构。
@@ -37,7 +37,7 @@
 
 ### 目标程序
 
-通过编辑唯一的目标程序文件，改进当前 `<被优化目标>`（如：渲染性能 / 转化率 / 错误率 / 算法质量……）：
+通过编辑唯一的目标程序文件，改进当前 `<被优化目标>`（如：渲染性能 / 转化率 / 错误率 / 算法质量 / 策略 score……）：
 
 ```text
 <src/target_program.ext>
@@ -107,11 +107,11 @@ Probe → Diagnose → Propose → Patch → Evaluate → Replay → Decide → 
 
 ## 迭代规则
 
-1. 创建独立 worktree 和分支（见 [`docs/spec/worktree-workflow.md`](../spec/worktree-workflow.md)）。
+1. 创建独立 worktree 和分支（见仓库 `docs/spec/worktree-workflow.md`）。
 2. 想法只改 `<src/target_program.ext>`。
 3. 运行 `<your evaluator command>`。
 4. 只有 `score` 严格高于当前基线、且满足有效候选门槛，候选才可保留进入人工审查。
-5. 任何经审查准备提交的候选，都必须先运行 `./scripts/harness.sh`。
+5. 任何经审查准备提交的候选，都必须先运行验证门禁（如 `./scripts/harness.sh`）。
 6. 失败或未完成的实验不得合入 `main`。
 
 每次实验都要在交接或报告中记录：候选 commit、score、关键指标、有效样本量，以及一句简短的想法说明。
@@ -138,6 +138,4 @@ data/
 
 ## 与持续学习的衔接
 
-本框架是 `AGENTS.md`「持续学习」节的落地载体：trial 账本承载「失败留痕」，golden case 承载「防遗忘回放」，Compress 步骤承载「压缩历史」。常见的、非 HL 专属的踩坑沉淀到 [`../guide/common-pitfalls.md`](../guide/common-pitfalls.md)。
-
-> 想把本框架变成可复用的 agent 能力？参见仓库内的 [`skills/hl-quant/`](../../skills/hl-quant/SKILL.md) skill（它自带一份同步的 [`references/framework.md`](../../skills/hl-quant/references/framework.md)，便于脱离仓库分发；改本文件时记得同步那一份）。
+本框架是「持续学习」的落地载体：trial 账本承载「失败留痕」，golden case 承载「防遗忘回放」，Compress 步骤承载「压缩历史」。常见的、非 HL 专属的踩坑沉淀到仓库 `docs/guide/common-pitfalls.md`。
