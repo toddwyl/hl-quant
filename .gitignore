@@ -7,5 +7,8 @@ venv/
 # 回测数据缓存与结果（不入库）
 example/.cache/
 
+# 工具生成的连接缓存（不入库）
+.cc-connect/
+
 # OS
 .DS_Store
