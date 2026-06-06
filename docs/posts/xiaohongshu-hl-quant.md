@@ -36,9 +36,9 @@
 
 一句话：**它优化的不是回测分数，是「不被回测骗到」**📌
 
-整套流程我打包成 skill 了，一行命令装进你的 AI👇
-`npx skills add toddwyl/hl-quant`
-GitHub 搜 **toddwyl/hl-quant**，有能跑的完整 demo🚀
+完整方法 + 可跑 demo + 一键安装的 skill，全都开源在我 GitHub👇
+⭐️ 先去 **GitHub 搜 toddwyl/hl-quant 点个 Star**
+star 完，仓库 README 里照着一行命令就能把这套纪律装进你自己的 AI🚀
 
 ⚠️只分享方法，不构成投资建议，股市有风险
 想拆方法的，主页微信群见👀
