@@ -4,7 +4,7 @@
 
 ### 把量化研究压缩成「一个可编辑的策略 + 一个固定的打分器」，再用启发式学习持续把分数推高。
 
-中文 · [English (TODO)](README.md)
+中文 · [English](README.en.md)
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 [![Stars](https://img.shields.io/github/stars/toddwyl/hl-quant?style=flat)](https://github.com/toddwyl/hl-quant/stargazers)
@@ -189,11 +189,11 @@ hl-quant/
 面向中文用户的微信交流群（**WeChat group for Chinese-speaking users**）。扫码加入，一起讨论启发式学习、量化策略与 Agent 工作流：
 
 <div align="center">
-<img src="docs/images/wechat-group.jpg" alt="微信交流群二维码" width="240">
+<img src="docs/images/wechat-group.png" alt="微信交流群二维码" width="240">
 </div>
 
 > [!NOTE]
-> 二维码图片请放在 `docs/images/wechat-group.jpg`（群二维码会定期更新；若已过期，欢迎在 Issues 留言）。
+> 群二维码会定期更新；若已过期，欢迎在 Issues 留言。
 
 ## Star History
 
