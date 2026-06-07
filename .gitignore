@@ -12,3 +12,9 @@ example/.cache/
 
 # OS
 .DS_Store
+
+# xiaohongshu-mcp login session (never commit)
+cookies.json
+
+# personal post drafts/images — keep local only
+docs/posts/
