@@ -10,6 +10,7 @@
 [![Stars](https://img.shields.io/github/stars/toddwyl/hl-quant?style=flat)](https://github.com/toddwyl/hl-quant/stargazers)
 [![Agent Skill](https://img.shields.io/badge/Agent%20Skill-npx%20skills-black)](skills/hl-quant/SKILL.md)
 [![Demo Data: JoinQuant](https://img.shields.io/badge/demo%20data-聚宽%20JQData-orange)](https://www.joinquant.com/help/api/doc?name=JQDatadoc)
+[![Linux.do community](https://img.shields.io/badge/Linux.do-community-0ea5e9)](https://linux.do/)
 
 [What is this](#what-is-this) · [快速开始](#快速开始) · [How it works](#how-it-works) · [安装 Skills](#安装-skills) · [微信交流群](#微信交流群) · [Star History](#star-history)
 
