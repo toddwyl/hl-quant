@@ -24,7 +24,7 @@ os.environ.setdefault("HLQ_START", "2022-01-01")
 os.environ.setdefault("HLQ_END", "2026-02-28")
 
 import backtest  # noqa: E402
-import strategy  # noqa: E402
+import wf  # noqa: E402  (self-contained MA eval, policy-agnostic)
 
 # 候选搜索空间（短窗, 长窗）。基线 = 5/10（聚宽双均线 demo 的原始参数）。
 BASELINE = (5, 10)
@@ -39,10 +39,8 @@ MIN_TRADES_TRAIN = 10
 
 
 def evaluate(prices, short, long_):
-    """在给定窗口下跑固定评估器，返回 Metrics。"""
-    strategy.SHORT_WINDOW = short
-    strategy.LONG_WINDOW = long_
-    return backtest.run_backtest(prices)
+    """在给定 MA 窗口下评估（自带仿真，不依赖现行 RSI policy）。"""
+    return wf.eval_window(prices, short, long_)
 
 
 def buy_and_hold_return(prices) -> float:

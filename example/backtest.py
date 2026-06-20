@@ -231,8 +231,7 @@ def main() -> None:
     m = run_backtest(prices)
     print(f"标的 {SECURITY}  区间 {START_DATE} ~ {END_DATE}  "
           f"({len(prices)} 个交易日, 源={'yfinance' if _use_yfinance() else 'joinquant'})")
-    print(f"参数  SHORT_WINDOW={strategy.SHORT_WINDOW}  "
-          f"LONG_WINDOW={strategy.LONG_WINDOW}")
+    print(f"参数  {getattr(strategy, 'PARAMS', '')}")
     print("-" * 48)
     print(f"  总收益     : {m.total_return:+.2%}")
     print(f"  年化收益   : {m.annualized_return:+.2%}")

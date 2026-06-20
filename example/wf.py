@@ -21,7 +21,14 @@ from dataclasses import dataclass
 import pandas as pd
 
 import backtest
-import strategy
+
+# 注意：本模块是 round-1 的「MA 窗口搜索」专用 harness，自带 MA 仿真，**不依赖**
+# 当前 strategy.py 的 decide（policy 已在 round-2 切到 RSI）。这样 E1-E4 的 MA
+# 结果与现行 policy 无关，始终可复现。policy-agnostic 的候选擂台见 run_candidates.py。
+
+
+def _ma(close: pd.Series, n: int) -> pd.Series:
+    return close.rolling(n).mean()
 
 
 def _sortino(returns: pd.Series, periods: int = 252) -> float:
@@ -45,9 +52,30 @@ def bh_metrics(prices: pd.DataFrame) -> tuple[float, float]:
 
 
 def eval_window(prices: pd.DataFrame, short: int, long_: int):
-    strategy.SHORT_WINDOW = short
-    strategy.LONG_WINDOW = long_
-    return backtest.run_backtest(prices)
+    """把 (short, long) 双均线当作 standalone 窗口评估（与 round-1 口径一致：
+    信号用窗口内已完成 bar，成交在次日开盘）。自带仿真，不动 strategy.py。"""
+    opens = prices["open"].reset_index(drop=True)
+    closes = prices["close"].reset_index(drop=True)
+    target = (_ma(closes, short) > _ma(closes, long_)).to_numpy()
+    cash, shares, entry = backtest.INITIAL_CASH, 0.0, 0.0
+    eq, trades = [], []
+    for j in range(len(closes)):
+        want = bool(target[j - 1]) if j > 0 else False
+        px = float(opens.iloc[j])
+        if want and shares == 0.0:
+            comm = max(cash * backtest.COMMISSION_RATE, backtest.MIN_COMMISSION)
+            shares = (cash - comm) / px
+            entry = cash
+            cash = 0.0
+        elif not want and shares > 0.0:
+            proceeds = shares * px
+            comm = max(proceeds * backtest.COMMISSION_RATE, backtest.MIN_COMMISSION)
+            tax = proceeds * backtest.STAMP_TAX_RATE
+            cash = proceeds - comm - tax
+            trades.append(cash - entry)
+            shares = 0.0
+        eq.append(cash + shares * float(closes.iloc[j]))
+    return backtest._compute_metrics(eq, trades)
 
 
 def select_on_train(train, candidates, baseline, min_trades_train):
