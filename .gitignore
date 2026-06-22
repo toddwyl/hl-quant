@@ -7,9 +7,6 @@ venv/
 # 回测数据缓存与结果（不入库）
 example/.cache/
 
-# HL 实验留痕（trial ledger / summary，仅本地）
-data/hl_runs/
-
 # 工具生成的连接缓存（不入库）
 .cc-connect/
 
