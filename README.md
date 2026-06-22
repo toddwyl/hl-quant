@@ -12,7 +12,7 @@
 [![Demo Data: JoinQuant](https://img.shields.io/badge/demo%20data-聚宽%20JQData-orange)](https://www.joinquant.com/help/api/doc?name=JQDatadoc)
 [![Linux.do community](https://img.shields.io/badge/Linux.do-community-0ea5e9)](https://linux.do/)
 
-[What is this](#what-is-this) · [快速开始](#快速开始) · [How it works](#how-it-works) · [安装 Skills](#安装-skills) · [微信交流群](#微信交流群) · [Star History](#star-history)
+[What is this](#what-is-this) · [快速开始](#快速开始) · [How it works](#how-it-works) · [安装 Skills](#安装-skills) · [Star History](#star-history)
 
 </div>
 
@@ -184,17 +184,6 @@ hl-quant/
 └── docs/
     └── design/heuristic-exploration-framework.md   # 范式背后的完整设计
 ```
-
-## 微信交流群
-
-面向中文用户的微信交流群（**WeChat group for Chinese-speaking users**）。扫码加入，一起讨论启发式学习、量化策略与 Agent 工作流：
-
-<div align="center">
-<img src="docs/images/wechat-group.png" alt="微信交流群二维码" width="240">
-</div>
-
-> [!NOTE]
-> 群二维码会定期更新；若已过期，欢迎在 Issues 留言。
 
 ## Star History
 
