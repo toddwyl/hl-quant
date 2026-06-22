@@ -1,5 +1,3 @@
 jqdatasdk>=1.9.0
 pandas>=1.3.0
 numpy
-# 可选：免账号的标普500等海外标的数据源（HLQ_SOURCE=yfinance）
-yfinance>=0.2.0
